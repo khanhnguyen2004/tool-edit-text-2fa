@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import Sidebar from './SideBar';
 import ToolFacebookLink from './tools/ToolFacebookLink';
+import { ToolIcons } from './ToolIcons';
 
 export default function ToolContainer() {
     const [selectedTool, setSelectedTool] = useState('cookie');
+    const [collapsed, setCollapsed] = useState(false);
 
     const renderTool = () => {
         switch (selectedTool) {
@@ -64,9 +66,27 @@ export default function ToolContainer() {
     };
 
     return (
-        <div className="flex">
-            <Sidebar onSelect={setSelectedTool} />
-            <main className="flex-1 p-6 bg-white h-screen overflow-y-auto">{renderTool()}</main>
+        <div className="flex min-h-screen bg-[var(--muted)]">
+            <Sidebar onSelect={setSelectedTool} collapsed={collapsed} />
+            <main className="flex-1 bg-[var(--background)] text-[var(--foreground)] overflow-y-auto hide-scrollbar">
+                <div className="sticky top-0 z-10 bg-[var(--background)] border-b border-[var(--border)]">
+                    <div className="h-12 flex items-center gap-3 px-3">
+                        <button
+                            type="button"
+                            aria-label={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+                            onClick={() => setCollapsed((v) => !v)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--sidebar-accent-foreground)] hover:bg-[var(--sidebar-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                            style={{ transition: 'var(--transition-smooth)' }}
+                            title={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+                        >
+                            <ToolIcons.LayoutToggle className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+                <div className="p-6">
+                    {renderTool()}
+                </div>
+            </main>
         </div>
     );
 }
