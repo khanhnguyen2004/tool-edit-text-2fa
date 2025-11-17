@@ -2,7 +2,9 @@
 import { useState } from 'react';
 export default function ToolLoaiText() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(
+`abc
+abcde`);
     const [cutLength, setCutLength] = useState(5);
     const [removeContains, setRemoveContains] = useState('');
     const [result, setResult] = useState('');
@@ -24,7 +26,7 @@ export default function ToolLoaiText() {
             <div className="flex items-center space-x-4">
                 <label className="text-gray-700 font-medium w-48 text-right me-3">Loại bỏ trùng lặp?</label>
                 <label className="inline-flex items-center cursor-pointer">
-                    <input  type="checkbox" checked={removeDuplicate} onChange={(e) => setRemoveDuplicate(e.target.checked)} className="sr-only peer" />
+                    <input type="checkbox" checked={removeDuplicate} onChange={(e) => setRemoveDuplicate(e.target.checked)} className="sr-only peer" />
                     <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 relative">
                         <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform ${removeDuplicate ? 'translate-x-5' : ''}`} ></span>
                     </div>

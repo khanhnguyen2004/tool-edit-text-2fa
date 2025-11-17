@@ -1,8 +1,12 @@
 'use client';
 import { useState } from 'react';
 export default function ToolJoinChu() {
-    const [inputA, setInputA] = useState('');
-    const [inputB, setInputB] = useState('');
+    const [inputA, setInputA] = useState(
+`ey1
+ey2`);
+    const [inputB, setInputB] = useState(
+`id1|500
+id2|10000`);
     const [subPerToken, setSubPerToken] = useState(500); // mặc định 500
     const [result, setResult] = useState('');
     const handleTrigger = () => {

@@ -2,7 +2,9 @@
 import { useState } from 'react';
 export default function ToolLinkHtml() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(
+`<a href='http://google.com/1.html'>1.html</a>
+<a href='/2.html'>2.html</a>`);
     const [link, SetLink] = useState('http://google.com/');
     const [links, setLinks] = useState<string[]>([]);
     const [result, setResult] = useState('');
