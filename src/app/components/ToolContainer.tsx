@@ -18,6 +18,15 @@ import ToolFilterChar from './tools/ToolFilterChar';
 import ToolCopyFile from './tools/ToolCopyFile';
 import ToolFilterCsv from './tools/ToolFilterCsv';
 import ToolFacebookLink from './tools/ToolFacebookLink';
+import ToolAccount from './tools/ToolAccount';
+import ToolLoaiText from './tools/ToolLoaiText';
+import ToolJoinChu from './tools/ToolJoinChu';
+import ToolTinhSub from './tools/ToolTinhSub';
+import ToolLocTag from './tools/ToolLocTag';
+import ToolJson from './tools/ToolJson';
+import ToolGhepFile from './tools/ToolGhepFile';
+import ToolAnhHtml from './tools/ToolAnhHtml';
+import ToolLinkHtml from './tools/ToolLinkHtml';
 
 export default function ToolContainer() {
     const [selectedTool, setSelectedTool] = useState('cookie');
@@ -61,29 +70,29 @@ export default function ToolContainer() {
                 return <ToolCopyFile />;
 
             case 'anh-html':
-                return <div className="p-6 text-gray-500 text-center">Đang phát triển...</div>;
+                return <ToolAnhHtml />
             case 'link-html':
-                return <div className="p-6 text-gray-500 text-center">Đang phát triển...</div>;
+                return <ToolLinkHtml />
             case 'loc-csv':
                 return <ToolFilterCsv />;
 
             case 'ghep-file':
-
+                return <ToolGhepFile />
             case 'json':
-
+                return <ToolJson />
             case 'loc-tag':
-
+                return <ToolLocTag />
             case 'tinh-sub':
-
+                return <ToolTinhSub />
             case 'join-chu':
-
+                return <ToolJoinChu />
             case 'account':
-
+                return <ToolAccount />
             case 'loai-text':
-
+                return <ToolLoaiText />
             case 'facebook-link':
                 return <ToolFacebookLink />
-        
+
         }
     };
 
