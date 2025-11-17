@@ -19,14 +19,14 @@ import ToolCopyFile from './tools/ToolCopyFile';
 import ToolFilterCsv from './tools/ToolFilterCsv';
 import ToolFacebookLink from './tools/ToolFacebookLink';
 import ToolAccount from './tools/ToolAccount';
-import ToolLoaiText from './tools/ToolLoaiText';
-import ToolJoinChu from './tools/ToolJoinChu';
-import ToolTinhSub from './tools/ToolTinhSub';
-import ToolLocTag from './tools/ToolLocTag';
-import ToolJson from './tools/ToolJson';
-import ToolGhepFile from './tools/ToolGhepFile';
 import ToolAnhHtml from './tools/ToolAnhHtml';
+import ToolGhepFile from './tools/ToolGhepFile';
+import ToolJoinChu from './tools/ToolJoinChu';
+import ToolJson from './tools/ToolJson';
 import ToolLinkHtml from './tools/ToolLinkHtml';
+import ToolLoaiText from './tools/ToolLoaiText';
+import ToolLocTag from './tools/ToolLocTag';
+import ToolTinhSub from './tools/ToolTinhSub';
 
 export default function ToolContainer() {
     const [selectedTool, setSelectedTool] = useState('cookie');
@@ -70,29 +70,29 @@ export default function ToolContainer() {
                 return <ToolCopyFile />;
 
             case 'anh-html':
-                return <ToolAnhHtml />
+                return <ToolAnhHtml />;
             case 'link-html':
-                return <ToolLinkHtml />
+                return <ToolLinkHtml />;
             case 'loc-csv':
                 return <ToolFilterCsv />;
-
             case 'ghep-file':
-                return <ToolGhepFile />
+                return <ToolGhepFile />;
             case 'json':
-                return <ToolJson />
+                return <ToolJson />;
             case 'loc-tag':
-                return <ToolLocTag />
+                return <ToolLocTag />;
             case 'tinh-sub':
-                return <ToolTinhSub />
+                return <ToolTinhSub />;
             case 'join-chu':
-                return <ToolJoinChu />
+                return <ToolJoinChu />;
             case 'account':
-                return <ToolAccount />
+                return <ToolAccount />;
             case 'loai-text':
-                return <ToolLoaiText />
+                return <ToolLoaiText />;
             case 'facebook-link':
-                return <ToolFacebookLink />
-
+                return <ToolFacebookLink />;
+            default:
+                return <div className="p-6 text-gray-500 text-center">Tool không tồn tại</div>;
         }
     };
 
