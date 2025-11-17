@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 export default function ToolTinhSub() {
-    const [subInput, setSubInput] = useState('');
-    const [subRun, setSubRun] = useState('');
+    const [subInput, setSubInput] = useState('100021606163232|2078|11000');
+    const [subRun, setSubRun] = useState('100021606163232|12000');
     const [subOutput, setSubOutput] = useState('');
     const handleTrigger = () => {
         // Map để lưu id -> sub value

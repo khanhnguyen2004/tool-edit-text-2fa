@@ -2,7 +2,7 @@
 import { useState } from 'react';
 export default function ToolLocTag() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState('[IMG]http://www.use.com/images/s_1/ff4aa1e27bbfa78b04d1_2.jpg[/IMG]');
     const [startStr, setStartStr] = useState('[IMG]'); // ký tự bắt đầu
     const [endStr, setEndStr] = useState('[/IMG]'); // ký tự kết thúc
     const [result, setResult] = useState('');

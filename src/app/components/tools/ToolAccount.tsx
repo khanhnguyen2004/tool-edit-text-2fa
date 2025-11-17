@@ -2,7 +2,22 @@
 import { useState } from 'react';
 export default function ToolAccount() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(
+`email=nukeal@gmail.com
+pass=1243
+
+email=haivu@gmail.com
+pass=elooslge
+
+
+email=sequiz@gmail.com
+pass=suka
+
+email=entry@gmail.com
+pass=
+
+email=
+pass=`);
     const [result, setResult] = useState('');
     const [separator, setSeparator] = useState('|');
     const handleTrigger = () => {

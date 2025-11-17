@@ -2,7 +2,22 @@
 import { useState } from 'react';
 export default function ToolJson() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(
+`[
+    {
+        "domain": ".facebook.com",
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "act",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": false,
+        "session": true,
+        "storeId": "0",
+        "value": "323235353533",
+        "id": 1
+    }
+]`);
     const [result, setResult] = useState('');
     const handleTrigger = () => {
         const regex = /\[.*?\]/gs;

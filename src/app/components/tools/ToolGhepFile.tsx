@@ -2,8 +2,12 @@
 import { useState } from 'react';
 export default function ToolGhepFile() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText1, setInputText1] = useState('');
-    const [inputText2, setInputText2] = useState('');
+    const [inputText1, setInputText1] = useState(
+`A
+C`);
+    const [inputText2, setInputText2] = useState(
+`B
+D`);
     const [result, setResult] = useState('');
     const [separator, setSeparator] = useState(' + ');
     const handleTrigger = () => {

@@ -2,7 +2,9 @@
 import { useState } from 'react';
 export default function ToolAnhHtml() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(
+`<img src='http://i.imgur.com/l35eOVBb.jpg'/>
+<img src='/KBWh5jOb.jpg'/>`);
     const [link, SetLink] = useState('http://i.imgur.com/');
     const [links, setLinks] = useState<string[]>([]);
     const [result, setResult] = useState('');
