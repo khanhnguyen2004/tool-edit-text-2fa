@@ -45,18 +45,18 @@ export default function Sidebar({ onSelect, collapsed = false }: { onSelect: (id
     };
 
     return (
-        <aside className={`${collapsed ? 'w-14' : 'w-64'} bg-[var(--sidebar-background)] border-r border-[var(--border)] h-screen flex flex-col`}>
+        <aside className={`${collapsed ? 'w-14' : 'w-64'} bg-[var(--sidebar-background)] border-r border-[var(--border)] h-screen flex flex-col fixed left-0 top-0`}>
             {!collapsed && (
                 <div className="px-5 pt-6 pb-4 shadow-md">
                     <div className="space-y-1">
                         <h1 className="text-lg font-semibold text-[var(--foreground)] leading-tight">Tool Online</h1>
                     </div>
                     <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                        Công Cụ
+                        Công cụ edit text.
                     </p>
                 </div>
             )}
-            <nav className={`flex-1 overflow-y-auto hide-scrollbar ${collapsed ? 'px-1' : 'px-2'} pb-6 space-y-1 font-medium text-sm`}>
+            <nav className={`flex-1 overflow-y-auto hide-scrollbar ${collapsed ? 'px-1 pt-2' : 'px-2 pt-2'} pb-6 space-y-1 font-medium text-sm`}>
                 {tools.map((tool) => {
                     const isActive = active === tool.id;
                     const Icon = ToolIcons[tool.icon];

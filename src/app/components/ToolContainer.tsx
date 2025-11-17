@@ -1,8 +1,23 @@
 'use client';
 import { useState } from 'react';
 import Sidebar from './SideBar';
+import Header from './Header';
+import ToolCookie from './tools/ToolCookie';
+import ToolPomodoro from './tools/ToolPomodoro';
+import ToolEditText from './tools/ToolEditText';
+import ToolUidToYear from './tools/ToolUidToYear';
+import ToolCutString from './tools/ToolCutString';
+import ToolCutLine from './tools/ToolCutLine';
+import ToolJoinLines from './tools/ToolJoinLines';
+import ToolDuplicate from './tools/ToolDuplicate';
+import ToolReverseWords from './tools/ToolReverseWords';
+import ToolConcatString from './tools/ToolConcatString';
+import ToolSplitLines from './tools/ToolSplitLines';
+import ToolFilterString from './tools/ToolFilterString';
+import ToolFilterChar from './tools/ToolFilterChar';
+import ToolCopyFile from './tools/ToolCopyFile';
+import ToolFilterCsv from './tools/ToolFilterCsv';
 import ToolFacebookLink from './tools/ToolFacebookLink';
-import { ToolIcons } from './ToolIcons';
 
 export default function ToolContainer() {
     const [selectedTool, setSelectedTool] = useState('cookie');
@@ -11,38 +26,46 @@ export default function ToolContainer() {
     const renderTool = () => {
         switch (selectedTool) {
             case 'cookie':
-            // return <CookieTool />;
+                return <ToolCookie />;
             case 'pomodoro':
-            // code xử lý cho Pomodoro
+                return <ToolPomodoro />;
             case 'edit-text':
-            // return <EditTextTool />;
+                return <ToolEditText />;
             case 'uid-to-year':
-            // return <UidToCreatedYearTool />;
+                return <ToolUidToYear />;
             case 'cat-chuoi':
-
+                return <ToolCutString />;
             case 'cat-line':
-
+                return <ToolCutLine />;
             case 'ghep-dong':
-
+                return <ToolJoinLines />;
             case 'trung-lap':
+                return <ToolDuplicate />;
 
             case 'dao-tu':
+                return <ToolReverseWords />;
 
             case 'ghep-chuoi':
+                return <ToolConcatString />;
 
             case 'chia-cat-dong':
+                return <ToolSplitLines />;
 
             case 'loc-chuoi':
+                return <ToolFilterString />;
 
             case 'loc-chu':
+                return <ToolFilterChar />;
 
             case 'copy-file':
+                return <ToolCopyFile />;
 
             case 'anh-html':
-
+                return <div className="p-6 text-gray-500 text-center">Đang phát triển...</div>;
             case 'link-html':
-
+                return <div className="p-6 text-gray-500 text-center">Đang phát triển...</div>;
             case 'loc-csv':
+                return <ToolFilterCsv />;
 
             case 'ghep-file':
 
@@ -60,29 +83,15 @@ export default function ToolContainer() {
 
             case 'facebook-link':
                 return <ToolFacebookLink />
-            default:
-                return <div className="p-6 text-gray-500 text-center">Đang phát triển...</div>;
+        
         }
     };
 
     return (
-        <div className="flex min-h-screen bg-[var(--muted)]">
+        <div className="flex h-screen overflow-hidden bg-[var(--muted)]">
             <Sidebar onSelect={setSelectedTool} collapsed={collapsed} />
-            <main className="flex-1 bg-[var(--background)] text-[var(--foreground)] overflow-y-auto hide-scrollbar">
-                <div className="sticky top-0 z-10 bg-[var(--background)] border-b border-[var(--border)]">
-                    <div className="h-12 flex items-center gap-3 px-3">
-                        <button
-                            type="button"
-                            aria-label={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
-                            onClick={() => setCollapsed((v) => !v)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--sidebar-accent-foreground)] hover:bg-[var(--sidebar-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                            style={{ transition: 'var(--transition-smooth)' }}
-                            title={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
-                        >
-                            <ToolIcons.LayoutToggle className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
+            <main className={`flex-1 bg-[var(--background)] text-[var(--foreground)] overflow-y-auto hide-scrollbar ${collapsed ? 'ml-14' : 'ml-64'}`} style={{ transition: 'margin-left 0.2s ease-out' }}>
+                <Header collapsed={collapsed} onToggleCollapse={() => setCollapsed((v) => !v)} />
                 <div className="p-6">
                     {renderTool()}
                 </div>
