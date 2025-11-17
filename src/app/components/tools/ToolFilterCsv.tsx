@@ -234,8 +234,7 @@ export default function ToolFilterCsv() {
                             type="checkbox"
                             checked={selectedColumns.has('all')}
                             onChange={() => handleColumnToggle('all')}
-                            className="w-4 h-4 rounded border-[var(--border)] focus:ring-2 focus:ring-[var(--primary)]"
-                            style={{ accentColor: 'var(--primary)' }}
+                            className="checkbox-primary focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-1"
                         />
                         <span className={`text-sm ${selectedColumns.has('all') ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>Tất cả</span>
                     </label>
@@ -245,8 +244,7 @@ export default function ToolFilterCsv() {
                                 type="checkbox"
                                 checked={selectedColumns.has(column)}
                                 onChange={() => handleColumnToggle(column)}
-                                className="w-4 h-4 rounded border-[var(--border)] focus:ring-2 focus:ring-[var(--primary)]"
-                                style={{ accentColor: 'var(--primary)' }}
+                                className="checkbox-primary focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-1"
                             />
                             <span className={`text-sm ${selectedColumns.has(column) ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>{column}</span>
                         </label>
