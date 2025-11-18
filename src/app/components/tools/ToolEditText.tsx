@@ -170,13 +170,7 @@ export default function ToolEditText() {
         return text.split('').map(char => map[char] || char).join('');
     };
 
-    const textStyles: TextStyle[] = useMemo(() => {
-        // Helper function to safely get character at index with fallback
-        const safeChar = (str: string, index: number, fallback: string = ''): string => {
-            return str && str.length > index ? str[index] : fallback;
-        };
-
-        return [
+    const textStyles: TextStyle[] = useMemo(() => [
         {
             id: 'oldEnglish',
             name: 'Old English',
@@ -295,10 +289,15 @@ export default function ToolEditText() {
             id: 'creepify',
             name: 'Creepify',
             transform: (text) => {
-                const combining = ['̷', '̓', '͠', '̋', '̟', '̻', '̨', '̭', '̵', '̑', '̢', '̲', '̝', '̧', '̸', '̚', '̉', '̟', '̙', '͉', '͈', '̘', '̤', '̫', '̨', '̱'];
+                const combining = ['̷', '̓', '͠', '̋', '̟', '̻', '̨', '̭', '̵', '̑', '̢', '̲', '̝', '̧', '̸', '̚', '̉', '̟', '̙', '͉', '͈', '̘', '̤', '̫', '̨', '̱', '̍', '̎', '̏', '̐', '̑', '̒', '̕', '̚', '̛', '̀', '́', '̂', '̃', '̄', '̅', '̆', '̇', '̈', '̊', '̋', '̌', '̏', '͗', '͛', '͂', '̾', '͆', '͊', '͋', '͌', '͐', '͑', '͒', '͗', '͛', '͝', '͞', '͟', '͠', '͡'];
                 return text.split('').map(char => {
-                    const random = combining[Math.floor(Math.random() * combining.length)];
-                    return char + random;
+                    // Thêm 2-6 combining characters ngẫu nhiên để tạo hiệu ứng zalgo
+                    const numCombining = Math.floor(Math.random() * 5) + 2; // 2-6 characters
+                    let result = char;
+                    for (let i = 0; i < numCombining; i++) {
+                        result += combining[Math.floor(Math.random() * combining.length)];
+                    }
+                    return result;
                 }).join('');
             }
         },
@@ -709,8 +708,7 @@ export default function ToolEditText() {
             name: 'Random 1',
             transform: (text) => {
                 const double = transformText(text, charMaps.doubleStruck);
-                const bubbles = transformText(text, charMaps.bubbles);
-                return `🐲😡 ${safeChar(double, 0)}${safeChar(bubbles, 1)}${safeChar(bubbles, 2)} 👺♥`;
+                return `🐲😡 ${double} 👺♥`;
             }
         },
         {
@@ -718,15 +716,7 @@ export default function ToolEditText() {
             name: 'Random 2',
             transform: (text) => {
                 const cursive = transformText(text, charMaps.cursive);
-                const asianMap: Record<string, string> = {
-                    'a': '卂', 'b': '乃', 'c': '匚', 'd': 'ᗪ', 'e': '乇', 'f': '千', 'g': 'Ꮆ', 'h': '卄',
-                    'i': '丨', 'j': 'ﾌ', 'k': 'Ҝ', 'l': 'ㄥ', 'm': '爪', 'n': '几', 'o': 'ㄖ', 'p': '卩',
-                    'q': 'Ɋ', 'r': '尺', 's': '丂', 't': 'ㄒ', 'u': 'ㄩ', 'v': 'ᐯ', 'w': '山', 'x': '乂',
-                    'y': 'ㄚ', 'z': '乙'
-                };
-                const asian = transformText(text, asianMap);
-                const script = transformText(text, charMaps.scriptify);
-                return `♠😝 ${safeChar(cursive, 0)}${safeChar(asian, 1)}${safeChar(script, 2)} 💣🐺`;
+                return `♠😝 ${cursive} 💣🐺`;
             }
         },
         {
@@ -734,8 +724,7 @@ export default function ToolEditText() {
             name: 'Random 3',
             transform: (text) => {
                 const wide = transformText(text, charMaps.wide);
-                const bubbles = transformText(text, charMaps.bubbles);
-                return `-漫~*'¨¯¨'*·舞~ ${safeChar(wide, 0)}${safeChar(bubbles, 1)}${safeChar(text, 2)} ~舞*'¨¯¨'*·~漫-`;
+                return `-漫~*'¨¯¨'*·舞~ ${wide} ~舞*'¨¯¨'*·~漫-`;
             }
         },
         {
@@ -743,15 +732,13 @@ export default function ToolEditText() {
             name: 'Random 4',
             transform: (text) => {
                 const oldEnglish = transformText(text, charMaps.oldEnglish);
-                const cursive = transformText(text, charMaps.cursive);
-                return `•´¯\`•. ${safeChar(oldEnglish, 0)}${safeChar(cursive, 1)}${safeChar(cursive, 2)} .•´¯\`•`;
+                return `•´¯\`•. ${oldEnglish} .•´¯\`•`;
             }
         },
         {
             id: 'random5',
             name: 'Random 5',
             transform: (text) => {
-                const superscript = transformText(text, charMaps.superscript);
                 const neonMap: Record<string, string> = {
                     'a': 'ᗩ', 'b': 'ᗷ', 'c': 'ᑕ', 'd': 'ᗪ', 'e': 'E', 'f': 'ᖴ', 'g': 'G', 'h': 'ᕼ',
                     'i': 'I', 'j': 'ᒍ', 'k': 'K', 'l': 'ᒪ', 'm': 'ᗰ', 'n': 'ᑎ', 'o': 'O', 'p': 'ᑭ',
@@ -759,7 +746,7 @@ export default function ToolEditText() {
                     'y': 'ᖻ', 'z': 'ᘔ'
                 };
                 const neon = transformText(text.toUpperCase(), neonMap);
-                return `💥♛ ${safeChar(superscript, 0)}${safeChar(neon, 1)}${safeChar(text, 2)} ♤🐠`;
+                return `💥♛ ${neon} ♤🐠`;
             }
         },
         {
@@ -773,8 +760,7 @@ export default function ToolEditText() {
                     'y': 'ㄚ', 'z': '乙'
                 };
                 const asian = transformText(text.toLowerCase(), asianMap);
-                const bubbles = transformText(text, charMaps.bubbles);
-                return `💝🐸 ${safeChar(asian, 0)}${safeChar(text, 1)}${safeChar(bubbles, 2)} 🐚♞`;
+                return `💝🐸 ${asian} 🐚♞`;
             }
         },
         {
@@ -782,9 +768,7 @@ export default function ToolEditText() {
             name: 'Random 7',
             transform: (text) => {
                 const wide = transformText(text, charMaps.wide);
-                const oldEnglish = transformText(text, charMaps.oldEnglish);
-                const custom = transformText(text, { 'c': '℃' });
-                return `🐣♨ ${safeChar(wide, 0)}${safeChar(oldEnglish, 1)}${safeChar(custom, 2)} 🐸🎉`;
+                return `🐣♨ ${wide} 🐸🎉`;
             }
         },
         {
@@ -792,8 +776,7 @@ export default function ToolEditText() {
             name: 'Random 8',
             transform: (text) => {
                 const bubbles = transformText(text, charMaps.bubbles);
-                const double = transformText(text, charMaps.doubleStruck);
-                return `💣⛵ ${safeChar(bubbles, 0)}${safeChar(bubbles, 1)}${safeChar(double, 2)} 😳🐲`;
+                return `💣⛵ ${bubbles} 😳🐲`;
             }
         },
         {
@@ -801,13 +784,10 @@ export default function ToolEditText() {
             name: 'Random 9',
             transform: (text) => {
                 const cursive = transformText(text, charMaps.cursive);
-                const bold = transformText(text, charMaps.bold);
-                const custom = transformText(text, { 'C': 'ℂ' });
-                return `.•°¤*(¯\`★´¯)*¤° ${safeChar(cursive, 0)}${safeChar(bold, 1)}${safeChar(custom, 2)} °¤*(¯´★\`¯)*¤°•.`;
+                return `.•°¤*(¯\`★´¯)*¤° ${cursive} °¤*(¯´★\`¯)*¤°•.`;
             }
         }
-        ];
-    }, []);
+    ], []);
 
     const handleCopy = async (styleId: string, transformedText: string) => {
         try {
