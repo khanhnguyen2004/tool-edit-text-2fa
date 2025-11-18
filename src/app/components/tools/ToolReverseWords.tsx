@@ -7,6 +7,16 @@ export default function ToolReverseWords() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
+    // Hàm shuffle ngẫu nhiên (Fisher-Yates algorithm)
+    const shuffleArray = (array: string[]): string[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
     // Xử lý trigger
     const handleTrigger = () => {
         if (!content.trim()) {
@@ -23,10 +33,10 @@ export default function ToolReverseWords() {
             processedLines = [...new Set(processedLines)];
         }
 
-        // Đảo ngược thứ tự các dòng
-        const reversedLines = [...processedLines].reverse();
+        // Xáo trộn ngẫu nhiên thứ tự các dòng (mỗi lần trigger sẽ cho kết quả khác nhau)
+        const shuffledLines = shuffleArray(processedLines);
 
-        setResult(reversedLines.join('\n'));
+        setResult(shuffledLines.join('\n'));
     };
 
     // Copy kết quả vào clipboard
@@ -85,7 +95,7 @@ export default function ToolReverseWords() {
                 <button
                     type="button"
                     onClick={handleTrigger}
-                    className="px-8 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
                 >
                     Trigger
                 </button>

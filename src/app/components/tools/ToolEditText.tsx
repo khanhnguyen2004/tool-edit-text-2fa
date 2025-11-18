@@ -170,7 +170,13 @@ export default function ToolEditText() {
         return text.split('').map(char => map[char] || char).join('');
     };
 
-    const textStyles: TextStyle[] = useMemo(() => [
+    const textStyles: TextStyle[] = useMemo(() => {
+        // Helper function to safely get character at index with fallback
+        const safeChar = (str: string, index: number, fallback: string = ''): string => {
+            return str && str.length > index ? str[index] : fallback;
+        };
+
+        return [
         {
             id: 'oldEnglish',
             name: 'Old English',
@@ -704,7 +710,7 @@ export default function ToolEditText() {
             transform: (text) => {
                 const double = transformText(text, charMaps.doubleStruck);
                 const bubbles = transformText(text, charMaps.bubbles);
-                return `🐲😡 ${double[0]}${bubbles[1]}${bubbles[2]} 👺♥`;
+                return `🐲😡 ${safeChar(double, 0)}${safeChar(bubbles, 1)}${safeChar(bubbles, 2)} 👺♥`;
             }
         },
         {
@@ -720,7 +726,7 @@ export default function ToolEditText() {
                 };
                 const asian = transformText(text, asianMap);
                 const script = transformText(text, charMaps.scriptify);
-                return `♠😝 ${cursive[0]}${asian[1]}${script[2]} 💣🐺`;
+                return `♠😝 ${safeChar(cursive, 0)}${safeChar(asian, 1)}${safeChar(script, 2)} 💣🐺`;
             }
         },
         {
@@ -728,7 +734,8 @@ export default function ToolEditText() {
             name: 'Random 3',
             transform: (text) => {
                 const wide = transformText(text, charMaps.wide);
-                return `-漫~*'¨¯¨'*·舞~ ${wide[0]}${transformText(text, charMaps.bubbles)[1]}${text[2]} ~舞*'¨¯¨'*·~漫-`;
+                const bubbles = transformText(text, charMaps.bubbles);
+                return `-漫~*'¨¯¨'*·舞~ ${safeChar(wide, 0)}${safeChar(bubbles, 1)}${safeChar(text, 2)} ~舞*'¨¯¨'*·~漫-`;
             }
         },
         {
@@ -737,7 +744,7 @@ export default function ToolEditText() {
             transform: (text) => {
                 const oldEnglish = transformText(text, charMaps.oldEnglish);
                 const cursive = transformText(text, charMaps.cursive);
-                return `•´¯\`•. ${oldEnglish[0]}${cursive[1]}${cursive[2]} .•´¯\`•`;
+                return `•´¯\`•. ${safeChar(oldEnglish, 0)}${safeChar(cursive, 1)}${safeChar(cursive, 2)} .•´¯\`•`;
             }
         },
         {
@@ -751,7 +758,8 @@ export default function ToolEditText() {
                     'q': 'ᑫ', 'r': 'ᖇ', 's': 'ᔕ', 't': 'T', 'u': 'ᑌ', 'v': 'ᐯ', 'w': 'ᗯ', 'x': '᙭',
                     'y': 'ᖻ', 'z': 'ᘔ'
                 };
-                return `💥♛ ${superscript[0]}${transformText(text.toUpperCase(), neonMap)[1]}${text[2]} ♤🐠`;
+                const neon = transformText(text.toUpperCase(), neonMap);
+                return `💥♛ ${safeChar(superscript, 0)}${safeChar(neon, 1)}${safeChar(text, 2)} ♤🐠`;
             }
         },
         {
@@ -766,7 +774,7 @@ export default function ToolEditText() {
                 };
                 const asian = transformText(text.toLowerCase(), asianMap);
                 const bubbles = transformText(text, charMaps.bubbles);
-                return `💝🐸 ${asian[0]}${text[1]}${bubbles[2]} 🐚♞`;
+                return `💝🐸 ${safeChar(asian, 0)}${safeChar(text, 1)}${safeChar(bubbles, 2)} 🐚♞`;
             }
         },
         {
@@ -775,7 +783,8 @@ export default function ToolEditText() {
             transform: (text) => {
                 const wide = transformText(text, charMaps.wide);
                 const oldEnglish = transformText(text, charMaps.oldEnglish);
-                return `🐣♨ ${wide[0]}${oldEnglish[1]}${transformText(text, { 'c': '℃' })[2]} 🐸🎉`;
+                const custom = transformText(text, { 'c': '℃' });
+                return `🐣♨ ${safeChar(wide, 0)}${safeChar(oldEnglish, 1)}${safeChar(custom, 2)} 🐸🎉`;
             }
         },
         {
@@ -784,7 +793,7 @@ export default function ToolEditText() {
             transform: (text) => {
                 const bubbles = transformText(text, charMaps.bubbles);
                 const double = transformText(text, charMaps.doubleStruck);
-                return `💣⛵ ${bubbles[0]}${bubbles[1]}${double[2]} 😳🐲`;
+                return `💣⛵ ${safeChar(bubbles, 0)}${safeChar(bubbles, 1)}${safeChar(double, 2)} 😳🐲`;
             }
         },
         {
@@ -793,10 +802,12 @@ export default function ToolEditText() {
             transform: (text) => {
                 const cursive = transformText(text, charMaps.cursive);
                 const bold = transformText(text, charMaps.bold);
-                return `.•°¤*(¯\`★´¯)*¤° ${cursive[0]}${bold[1]}${transformText(text, { 'C': 'ℂ' })[2]} °¤*(¯´★\`¯)*¤°•.`;
+                const custom = transformText(text, { 'C': 'ℂ' });
+                return `.•°¤*(¯\`★´¯)*¤° ${safeChar(cursive, 0)}${safeChar(bold, 1)}${safeChar(custom, 2)} °¤*(¯´★\`¯)*¤°•.`;
             }
         }
-    ], []);
+        ];
+    }, []);
 
     const handleCopy = async (styleId: string, transformedText: string) => {
         try {
@@ -836,7 +847,7 @@ export default function ToolEditText() {
                                 <span className="text-sm font-medium text-[var(--foreground)] min-w-[140px]">
                                     {style.name}
                                 </span>
-                                <span className="text-sm text-[var(--foreground)] flex-1">
+                                <span className="text-sm text-[var(--foreground)] flex-1" suppressHydrationWarning>
                                     {transformedText}
                                 </span>
                             </div>

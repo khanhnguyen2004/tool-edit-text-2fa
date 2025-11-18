@@ -7,7 +7,7 @@ export default function ToolCutString() {
     const [removeDuplicates, setRemoveDuplicates] = useState(true);
     const [content, setContent] = useState('DAAAAE....|user1|pass1\nDAAAAAG....|user2|pass2\nDAAAAAH....|user3|pass3');
     const [delimiter, setDelimiter] = useState('|');
-    const [cutType, setCutType] = useState<CutType>('clusters');
+    const [cutType, setCutType] = useState<CutType>('range');
     const [startCut, setStartCut] = useState('1');
     const [endCut, setEndCut] = useState('1');
     const [cutClusters, setCutClusters] = useState('1,2');
@@ -211,7 +211,7 @@ export default function ToolCutString() {
                 <button
                     type="button"
                     onClick={handleTrigger}
-                    className="px-8 py-3 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
                 >
                     Trigger
                 </button>
