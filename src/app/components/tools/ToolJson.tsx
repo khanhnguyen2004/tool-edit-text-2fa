@@ -20,7 +20,7 @@ export default function ToolJson() {
 ]`);
     const [result, setResult] = useState('');
     const handleTrigger = () => {
-        const regex = /\[.*?\]/gs;
+        const regex = /\[.*?\]/g;
         const matches = inputText.match(regex) || [];
         let arr: any[] = [];
         matches.forEach(m => {
