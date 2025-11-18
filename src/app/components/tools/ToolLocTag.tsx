@@ -7,23 +7,23 @@ export default function ToolLocTag() {
     const [endStr, setEndStr] = useState('[/IMG]'); // ký tự kết thúc
     const [result, setResult] = useState('');
     const handleTrigger = () => {
-        let outputArr = [];
+        let outputArr: string[] = [];
         let lines = inputText.split('\n').map(l => l.trim()).filter(Boolean);
-        if (removeDuplicate) {
-            outputArr = Array.from(new Set(lines));
-        }
-        lines = lines.map(line => {
+        outputArr = lines.map(lines => {
             if (startStr && endStr) {
-                const startIndex = line.indexOf(startStr);
-                const endIndex = line.indexOf(endStr, startIndex + startStr.length);
+                const startIndex = lines.indexOf(startStr);
+                const endIndex = lines.indexOf(endStr, startIndex + startStr.length);
                 if (startIndex !== -1 && endIndex !== -1) {
                     // loại bỏ từ startIndex đến endIndex + endStr.length
-                    return line.slice(startIndex + startStr.length, endIndex);
+                    return lines.slice(startIndex + startStr.length, endIndex);
                 }
             }
-            return line;
+            return lines;
         });
-        setResult(lines.join('\n'));
+        if (removeDuplicate) {
+            outputArr = Array.from(new Set(outputArr));
+        }
+        setResult(outputArr.join('\n'));
     };
     return (
         <div className="p-6 space-y-6">
