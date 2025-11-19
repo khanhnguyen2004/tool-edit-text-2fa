@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 type CookieLine = {
     uid: string;
@@ -8,6 +8,11 @@ type CookieLine = {
 };
 
 type SortOrder = 'asc' | 'desc' | 'none';
+
+// Compile regex patterns một lần để tối ưu performance
+const C_USER_PATTERN = /c_user=(\d+)/;
+const PURE_NUMBER_PATTERN = /^\d+$/;
+const TOKEN_PATTERN = /(?:xs|datr)=([^;]+)/;
 
 export default function ToolCookie() {
     const [removeDuplicates, setRemoveDuplicates] = useState(false);
@@ -19,24 +24,24 @@ export default function ToolCookie() {
     const [outputFormat, setOutputFormat] = useState<'uid' | 'token' | 'uid|token'>('uid|token');
     const [copied, setCopied] = useState(false);
 
-    // Parse cookie lines và extract UID
+    // Parse cookie lines và extract UID - tối ưu với useCallback
     // Hỗ trợ cả cookie format (c_user=123;...) và UID thuần (chỉ số)
-    const parseCookies = (text: string): CookieLine[] => {
+    const parseCookies = useCallback((text: string): CookieLine[] => {
         const lines = text.split('\n').filter(line => line.trim());
         return lines.map(line => {
             const trimmed = line.trim();
             
             // Tìm c_user trong cookie
-            const uidMatch = trimmed.match(/c_user=(\d+)/);
+            const uidMatch = trimmed.match(C_USER_PATTERN);
             let uid = uidMatch ? uidMatch[1] : '';
             
             // Nếu không tìm thấy c_user, kiểm tra xem có phải là UID thuần không (chỉ số)
-            if (!uid && /^\d+$/.test(trimmed)) {
+            if (!uid && PURE_NUMBER_PATTERN.test(trimmed)) {
                 uid = trimmed;
             }
             
             // Tìm token (xs= hoặc datr=)
-            const tokenMatch = trimmed.match(/(?:xs|datr)=([^;]+)/);
+            const tokenMatch = trimmed.match(TOKEN_PATTERN);
             const token = tokenMatch ? tokenMatch[1] : undefined;
 
             return {
@@ -45,7 +50,7 @@ export default function ToolCookie() {
                 token
             };
         });
-    };
+    }, []);
 
     // Lấy UID từ cookie
     const extractUIDs = (cookies: CookieLine[], sort: SortOrder = 'none', removeDup: boolean = false): string => {
@@ -343,18 +348,31 @@ export default function ToolCookie() {
             .join('\n');
     };
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize parsed cookies
+    const cookies = useMemo(() => {
+        if (!content.trim()) return [];
+        let parsed = parseCookies(content);
+        return removeDuplicates ? removeDuplicateCookies(parsed) : parsed;
+    }, [content, removeDuplicates, parseCookies]);
+
+    // Memoize parsed column cut pairs
+    const parsedColumnCutPairs = useMemo(() => {
+        return columnCutPairs.map(pair => {
+            let colNum = parseInt(pair.column, 10);
+            if (isNaN(colNum) || colNum < 1) colNum = 1;
+            
+            let cutNum = parseInt(pair.cutChars, 10);
+            if (isNaN(cutNum) || cutNum < 0) cutNum = 0;
+            
+            return { column: colNum, cutChars: cutNum };
+        });
+    }, [columnCutPairs]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (cookies.length === 0 && selectedFunction !== 'remove-in-acc') {
             setResult('');
             return;
-        }
-
-        let cookies = parseCookies(content);
-
-        // Áp dụng loại bỏ trùng lặp nếu bật
-        if (removeDuplicates) {
-            cookies = removeDuplicateCookies(cookies);
         }
 
         let output = '';
@@ -366,8 +384,8 @@ export default function ToolCookie() {
                 break;
 
             case 'sort-by-uid':
-                cookies = sortCookiesByUID(cookies, sortOrder);
-                output = cookies.map(c => c.fullCookie).join('\n');
+                const sortedByUID = sortCookiesByUID(cookies, sortOrder);
+                output = sortedByUID.map(c => c.fullCookie).join('\n');
                 break;
 
             case 'sort-uid':
@@ -376,19 +394,8 @@ export default function ToolCookie() {
                 break;
 
             case 'sort-column':
-                // Parse và validate giá trị cột và cắt ký tự từ array
-                const parsedPairs = columnCutPairs.map(pair => {
-                    let colNum = parseInt(pair.column, 10);
-                    if (isNaN(colNum) || colNum < 1) colNum = 1;
-                    
-                    let cutNum = parseInt(pair.cutChars, 10);
-                    if (isNaN(cutNum) || cutNum < 0) cutNum = 0;
-                    
-                    return { column: colNum, cutChars: cutNum };
-                });
-                
-                cookies = sortByColumn(cookies, sortOrder, parsedPairs);
-                output = cookies.map(c => c.fullCookie).join('\n');
+                const sortedByColumn = sortByColumn(cookies, sortOrder, parsedColumnCutPairs);
+                output = sortedByColumn.map(c => c.fullCookie).join('\n');
                 break;
 
             case 'remove-in-acc':
@@ -405,10 +412,10 @@ export default function ToolCookie() {
         }
 
         setResult(output);
-    };
+    }, [cookies, selectedFunction, sortOrder, removeDuplicates, parsedColumnCutPairs, content, outputFormat]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -418,7 +425,7 @@ export default function ToolCookie() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     const functionButtons = [
         { id: 'extract-uid', label: 'Lấy UID từ cookie' },

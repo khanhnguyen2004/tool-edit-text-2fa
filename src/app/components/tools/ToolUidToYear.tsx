@@ -1,7 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 type OutputStyle = 'short' | 'long';
+
+// Compile regex patterns một lần để tối ưu performance
+const URL_PATTERN = /(?:id=|facebook\.com\/profile\/|facebook\.com\/)(\d+)/i;
+const COOKIE_PATTERN = /c_user=(\d+)/;
+const NUMBER_PATTERN = /\d+/g;
+const PURE_NUMBER_PATTERN = /^\d+$/;
 
 export default function ToolUidToYear() {
     const [content, setContent] = useState('123123\nc_user=111;xs=xxx;sb=xxx;datr=xxx');
@@ -9,26 +15,26 @@ export default function ToolUidToYear() {
     const [outputStyle, setOutputStyle] = useState<OutputStyle>('short');
     const [copied, setCopied] = useState(false);
 
-    // Parse UID từ input (hỗ trợ UID thuần, cookie, URL Facebook)
-    const parseUIDs = (text: string): string[] => {
+    // Parse UID từ input (hỗ trợ UID thuần, cookie, URL Facebook) - tối ưu với useCallback
+    const parseUIDs = useCallback((text: string): string[] => {
         const lines = text.split('\n').filter(line => line.trim());
         return lines.map(line => {
             const trimmed = line.trim();
             
             // 1. Tìm UID trong URL Facebook (profile.php?id=, facebook.com/profile/, etc.)
-            const urlMatch = trimmed.match(/(?:id=|facebook\.com\/profile\/|facebook\.com\/)(\d+)/i);
+            const urlMatch = trimmed.match(URL_PATTERN);
             if (urlMatch) {
                 return urlMatch[1];
             }
             
             // 2. Tìm c_user trong cookie
-            const cookieMatch = trimmed.match(/c_user=(\d+)/);
+            const cookieMatch = trimmed.match(COOKIE_PATTERN);
             if (cookieMatch) {
                 return cookieMatch[1];
             }
             
             // 3. Tìm bất kỳ số nào trong chuỗi (nếu có nhiều số, lấy số dài nhất)
-            const allNumbers = trimmed.match(/\d+/g);
+            const allNumbers = trimmed.match(NUMBER_PATTERN);
             if (allNumbers && allNumbers.length > 0) {
                 // Lấy số dài nhất (có thể là UID)
                 const longestNumber = allNumbers.reduce((a, b) => a.length >= b.length ? a : b);
@@ -38,14 +44,14 @@ export default function ToolUidToYear() {
             }
             
             // 4. Nếu chuỗi chỉ chứa số thuần
-            if (/^\d+$/.test(trimmed)) {
+            if (PURE_NUMBER_PATTERN.test(trimmed)) {
                 return trimmed;
             }
             
             // Nếu không phải format nào, trả về rỗng
             return '';
         }).filter(uid => uid !== '');
-    };
+    }, []);
 
     // Chuyển đổi UID thành năm tạo tài khoản
     // Hỗ trợ nhiều nền tảng: Facebook, Twitter, Instagram, Discord, Snowflake IDs, etc.
@@ -190,14 +196,16 @@ export default function ToolUidToYear() {
         return { year, isAccurate: false };
     };
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize parsed UIDs
+    const uids = useMemo(() => parseUIDs(content), [content, parseUIDs]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (uids.length === 0) {
             setResult('');
             return;
         }
 
-        const uids = parseUIDs(content);
         const results = uids.map(uid => {
             try {
                 const { year } = uidToYear(uid);
@@ -205,11 +213,9 @@ export default function ToolUidToYear() {
                     return '';
                 }
                 
-                if (outputStyle === 'short') {
-                    return `${uid}|${year}`;
-                } else {
-                    return `${uid}|YEAR:${year}`;
-                }
+                return outputStyle === 'short' 
+                    ? `${uid}|${year}` 
+                    : `${uid}|YEAR:${year}`;
             } catch (error) {
                 console.error(`Error processing UID ${uid}:`, error);
                 return '';
@@ -217,10 +223,10 @@ export default function ToolUidToYear() {
         }).filter(line => line !== '');
 
         setResult(results.join('\n'));
-    };
+    }, [uids, outputStyle]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -230,7 +236,7 @@ export default function ToolUidToYear() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

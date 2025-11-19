@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export default function ToolConcatString() {
     const [removeDuplicates, setRemoveDuplicates] = useState(false);
@@ -12,20 +12,21 @@ export default function ToolConcatString() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize processed lines
+    const processedLines = useMemo(() => {
+        if (!content.trim()) return [];
+        const lines = content.split('\n').filter(line => line.trim());
+        return removeDuplicates ? [...new Set(lines)] : lines;
+    }, [content, removeDuplicates]);
+
+    // Memoize column index
+    const colIndex = useMemo(() => columnNumber - 1, [columnNumber]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (processedLines.length === 0) {
             setResult('');
             return;
-        }
-
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        let processedLines = lines;
-
-        // Loại bỏ trùng lặp nếu cần
-        if (removeDuplicates) {
-            processedLines = [...new Set(processedLines)];
         }
 
         // Xử lý ghép chuỗi
@@ -33,27 +34,24 @@ export default function ToolConcatString() {
             if (concatToColumn) {
                 // Ghép vào cột: split theo delimiter, ghép vào cột được chỉ định
                 const columns = line.split(delimiter);
-                const colIndex = columnNumber - 1; // Chuyển từ 1-indexed sang 0-indexed
                 
                 if (colIndex >= 0 && colIndex < columns.length) {
                     // Ghép chuỗi vào cột được chỉ định
                     columns[colIndex] = `${prependString}${columns[colIndex]}${appendString}`;
                     return columns.join(delimiter);
-                } else {
-                    // Nếu cột không tồn tại, giữ nguyên dòng
-                    return line;
                 }
-            } else {
-                // Ghép vào đầu và cuối dòng
-                return `${prependString}${line}${appendString}`;
+                // Nếu cột không tồn tại, giữ nguyên dòng
+                return line;
             }
+            // Ghép vào đầu và cuối dòng
+            return `${prependString}${line}${appendString}`;
         });
 
         setResult(resultLines.join('\n'));
-    };
+    }, [processedLines, concatToColumn, colIndex, delimiter, prependString, appendString]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -63,7 +61,7 @@ export default function ToolConcatString() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

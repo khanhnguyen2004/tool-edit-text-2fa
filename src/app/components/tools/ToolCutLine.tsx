@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 export default function ToolCutLine() {
     const [content, setContent] = useState('DAAAAE....|user1|pass1\nDAAAAAG....|user2|pass2\nDAAAAAH....|user3|pass3');
@@ -9,40 +9,44 @@ export default function ToolCutLine() {
     const [copiedCut, setCopiedCut] = useState(false);
     const [copiedRemaining, setCopiedRemaining] = useState(false);
 
-    // Tính số dòng
+    // Tính số dòng - memoized
     const lineCount = useMemo(() => {
         if (!content.trim()) return 0;
         return content.split('\n').filter(line => line.trim()).length;
     }, [content]);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Parse quantity một lần
+    const parsedQuantity = useMemo(() => {
+        const qty = parseInt(cutQuantity, 10);
+        return isNaN(qty) || qty <= 0 ? 0 : qty;
+    }, [cutQuantity]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (!content.trim() || parsedQuantity === 0) {
             setCutResult('');
             setRemainingResult('');
             return;
         }
 
         const lines = content.split('\n').filter(line => line.trim());
-        const quantity = parseInt(cutQuantity, 10);
-
-        if (isNaN(quantity) || quantity <= 0) {
+        if (lines.length === 0) {
             setCutResult('');
             setRemainingResult('');
             return;
         }
 
         // Cắt N dòng đầu
-        const cutLines = lines.slice(0, quantity);
+        const cutLines = lines.slice(0, parsedQuantity);
         // Các dòng còn lại
-        const remainingLines = lines.slice(quantity);
+        const remainingLines = lines.slice(parsedQuantity);
 
         setCutResult(cutLines.join('\n'));
         setRemainingResult(remainingLines.join('\n'));
-    };
+    }, [content, parsedQuantity]);
 
-    // Copy kết quả đã cắt
-    const handleCopyCut = async () => {
+    // Copy kết quả đã cắt - tối ưu với useCallback
+    const handleCopyCut = useCallback(async () => {
         if (!cutResult) return;
         
         try {
@@ -52,10 +56,10 @@ export default function ToolCutLine() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [cutResult]);
 
-    // Copy kết quả còn lại
-    const handleCopyRemaining = async () => {
+    // Copy kết quả còn lại - tối ưu với useCallback
+    const handleCopyRemaining = useCallback(async () => {
         if (!remainingResult) return;
         
         try {
@@ -65,7 +69,7 @@ export default function ToolCutLine() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [remainingResult]);
 
     return (
         <div className="space-y-6">

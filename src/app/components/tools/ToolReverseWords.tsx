@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export default function ToolReverseWords() {
     const [removeDuplicates, setRemoveDuplicates] = useState(true);
@@ -7,40 +7,37 @@ export default function ToolReverseWords() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Hàm shuffle ngẫu nhiên (Fisher-Yates algorithm)
-    const shuffleArray = (array: string[]): string[] => {
+    // Hàm shuffle ngẫu nhiên (Fisher-Yates algorithm) - memoized
+    const shuffleArray = useCallback((array: string[]): string[] => {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         return shuffled;
-    };
+    }, []);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize processed lines
+    const processedLines = useMemo(() => {
+        if (!content.trim()) return [];
+        const lines = content.split('\n').filter(line => line.trim());
+        return removeDuplicates ? [...new Set(lines)] : lines;
+    }, [content, removeDuplicates]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (processedLines.length === 0) {
             setResult('');
             return;
         }
 
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        let processedLines = lines;
-
-        // Loại bỏ trùng lặp 
-        if (removeDuplicates) {
-            processedLines = [...new Set(processedLines)];
-        }
-
         // Xáo trộn ngẫu nhiên thứ tự các dòng (mỗi lần trigger sẽ cho kết quả khác nhau)
         const shuffledLines = shuffleArray(processedLines);
-
         setResult(shuffledLines.join('\n'));
-    };
+    }, [processedLines, shuffleArray]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -50,7 +47,7 @@ export default function ToolReverseWords() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

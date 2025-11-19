@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 type CutType = 'range' | 'clusters';
 
@@ -14,61 +14,66 @@ export default function ToolCutString() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
+    // Memoize parsed values để tránh parse lại nhiều lần
+    const parsedStart = useMemo(() => parseInt(startCut, 10) - 1, [startCut]);
+    const parsedEnd = useMemo(() => parseInt(endCut, 10), [endCut]);
+    const parsedClusters = useMemo(() => {
+        return cutClusters
+            .split(',')
+            .map(s => parseInt(s.trim(), 10) - 1)
+            .filter(idx => !isNaN(idx) && idx >= 0);
+    }, [cutClusters]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
         if (!content.trim()) {
             setResult('');
             return;
         }
 
         const lines = content.split('\n').filter(line => line.trim());
+        if (lines.length === 0) {
+            setResult('');
+            return;
+        }
+
         const results: string[] = [];
 
         for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
 
-            // Split theo delimiter
+            // Split theo delimiter - chỉ split một lần
             const parts = trimmed.split(delimiter).map(p => p.trim());
+            if (parts.length === 0) continue;
 
             if (cutType === 'range') {
-                // Cắt từ x tới y
-                const start = parseInt(startCut, 10) - 1; // Chuyển từ 1-indexed sang 0-indexed
-                const end = parseInt(endCut, 10); // Giữ nguyên vì slice sẽ lấy đến end (không bao gồm)
-                
-                if (isNaN(start) || isNaN(end) || start < 0 || end <= start) {
+                // Validate indices
+                if (isNaN(parsedStart) || isNaN(parsedEnd) || parsedStart < 0 || parsedEnd <= parsedStart) {
                     continue;
                 }
 
-                const sliced = parts.slice(start, end);
+                const sliced = parts.slice(parsedStart, parsedEnd);
                 if (sliced.length > 0) {
                     results.push(sliced.join(delimiter));
                 }
             } else {
-                // Cắt cụm x,y,z
-                const clusterIndices = cutClusters
-                    .split(',')
-                    .map(s => parseInt(s.trim(), 10) - 1) // Chuyển từ 1-indexed sang 0-indexed
-                    .filter(idx => !isNaN(idx) && idx >= 0 && idx < parts.length);
-
-                if (clusterIndices.length > 0) {
-                    const selectedParts = clusterIndices.map(idx => parts[idx]);
+                // Filter valid indices
+                const validIndices = parsedClusters.filter(idx => idx < parts.length);
+                if (validIndices.length > 0) {
+                    const selectedParts = validIndices.map(idx => parts[idx]);
                     results.push(selectedParts.join(delimiter));
                 }
             }
         }
 
         // Loại bỏ trùng lặp nếu cần
-        let finalResults = results;
-        if (removeDuplicates) {
-            finalResults = [...new Set(results)];
-        }
-
+        const finalResults = removeDuplicates ? [...new Set(results)] : results;
         setResult(finalResults.join('\n'));
-    };
+    }, [content, delimiter, cutType, parsedStart, parsedEnd, parsedClusters, removeDuplicates]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -78,7 +83,7 @@ export default function ToolCutString() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

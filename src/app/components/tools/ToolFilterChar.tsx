@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 type FilterMode = 'remove' | 'keep';
 
@@ -12,103 +12,79 @@ export default function ToolFilterChar() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize lines
+    const lines = useMemo(() => {
+        if (!content.trim()) return [];
+        return content.split('\n').filter(line => line.trim());
+    }, [content]);
+
+    // Helper function để xử lý một dòng
+    const processLine = useCallback((line: string): string => {
+        const hasFrom = fromWord.trim().length > 0;
+        const hasTo = toWord.trim().length > 0;
+
+        if (!hasFrom && !hasTo) {
+            return line;
+        }
+
+        if (mode === 'remove') {
+            // Loại bỏ phần từ "Từ từ" đến "Đến từ"
+            if (hasFrom && hasTo) {
+                const fromIndex = line.indexOf(fromWord);
+                if (fromIndex !== -1) {
+                    const searchStart = fromIndex + fromWord.length;
+                    const toIndex = line.indexOf(toWord, searchStart);
+                    if (toIndex !== -1) {
+                        return line.substring(0, fromIndex) + line.substring(toIndex + toWord.length);
+                    }
+                    return line.substring(0, fromIndex);
+                }
+            } else if (hasFrom) {
+                const fromIndex = line.indexOf(fromWord);
+                return fromIndex !== -1 ? line.substring(0, fromIndex) : line;
+            } else if (hasTo) {
+                const toIndex = line.indexOf(toWord);
+                return toIndex !== -1 ? line.substring(toIndex + toWord.length) : line;
+            }
+        } else {
+            // Chỉ giữ lại phần từ "Từ từ" đến "Đến từ"
+            if (hasFrom && hasTo) {
+                const fromIndex = line.indexOf(fromWord);
+                if (fromIndex !== -1) {
+                    const searchStart = fromIndex + fromWord.length;
+                    const toIndex = line.indexOf(toWord, searchStart);
+                    if (toIndex !== -1) {
+                        return line.substring(fromIndex, toIndex + toWord.length);
+                    }
+                    return hasFrom ? line.substring(fromIndex) : '';
+                }
+                return '';
+            } else if (hasFrom) {
+                const fromIndex = line.indexOf(fromWord);
+                return fromIndex !== -1 ? line.substring(fromIndex) : '';
+            } else if (hasTo) {
+                const toIndex = line.indexOf(toWord);
+                return toIndex !== -1 ? line.substring(0, toIndex + toWord.length) : '';
+            }
+        }
+
+        return line;
+    }, [fromWord, toWord, mode]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (lines.length === 0) {
             setResult('');
             return;
         }
 
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        const processedLines = lines.map(line => {
-            if (!fromWord.trim() && !toWord.trim()) {
-                return line;
-            }
-
-            let processedLine = line;
-
-            if (mode === 'remove') {
-                // Loại bỏ phần từ "Từ từ" đến "Đến từ"
-                if (fromWord.trim() && toWord.trim()) {
-                    const fromIndex = processedLine.indexOf(fromWord);
-                    if (fromIndex !== -1) {
-                        const searchStart = fromIndex + fromWord.length;
-                        const toIndex = processedLine.indexOf(toWord, searchStart);
-                        if (toIndex !== -1) {
-                            // Loại bỏ từ vị trí fromIndex đến toIndex + length của toWord
-                            processedLine = processedLine.substring(0, fromIndex) + processedLine.substring(toIndex + toWord.length);
-                        } else if (fromWord.trim()) {
-                            // Nếu không tìm thấy "Đến từ", loại bỏ từ "Từ từ" đến cuối
-                            processedLine = processedLine.substring(0, fromIndex);
-                        }
-                    }
-                } else if (fromWord.trim()) {
-                    // Chỉ có "Từ từ", loại bỏ từ đó đến cuối
-                    const fromIndex = processedLine.indexOf(fromWord);
-                    if (fromIndex !== -1) {
-                        processedLine = processedLine.substring(0, fromIndex);
-                    }
-                } else if (toWord.trim()) {
-                    // Chỉ có "Đến từ", loại bỏ từ đầu đến "Đến từ"
-                    const toIndex = processedLine.indexOf(toWord);
-                    if (toIndex !== -1) {
-                        processedLine = processedLine.substring(toIndex + toWord.length);
-                    }
-                }
-            } else if (mode === 'keep') {
-                // Chỉ giữ lại phần từ "Từ từ" đến "Đến từ"
-                if (fromWord.trim() && toWord.trim()) {
-                    const fromIndex = processedLine.indexOf(fromWord);
-                    if (fromIndex !== -1) {
-                        const searchStart = fromIndex + fromWord.length;
-                        const toIndex = processedLine.indexOf(toWord, searchStart);
-                        if (toIndex !== -1) {
-                            // Giữ lại từ vị trí fromIndex đến toIndex + length của toWord
-                            processedLine = processedLine.substring(fromIndex, toIndex + toWord.length);
-                        } else if (fromWord.trim()) {
-                            // Nếu không tìm thấy "Đến từ", giữ lại từ "Từ từ" đến cuối
-                            processedLine = processedLine.substring(fromIndex);
-                        } else {
-                            processedLine = '';
-                        }
-                    } else {
-                        processedLine = '';
-                    }
-                } else if (fromWord.trim()) {
-                    // Chỉ có "Từ từ", giữ lại từ đó đến cuối
-                    const fromIndex = processedLine.indexOf(fromWord);
-                    if (fromIndex !== -1) {
-                        processedLine = processedLine.substring(fromIndex);
-                    } else {
-                        processedLine = '';
-                    }
-                } else if (toWord.trim()) {
-                    // Chỉ có "Đến từ", giữ lại từ đầu đến "Đến từ"
-                    const toIndex = processedLine.indexOf(toWord);
-                    if (toIndex !== -1) {
-                        processedLine = processedLine.substring(0, toIndex + toWord.length);
-                    } else {
-                        processedLine = '';
-                    }
-                }
-            }
-
-            return processedLine;
-        });
-
-        let finalLines = processedLines;
-
-        // Loại bỏ trùng lặp nếu cần
-        if (removeDuplicates) {
-            finalLines = [...new Set(finalLines)];
-        }
-
+        const processedLines = lines.map(processLine);
+        const finalLines = removeDuplicates ? [...new Set(processedLines)] : processedLines;
         setResult(finalLines.join('\n'));
-    };
+    }, [lines, processLine, removeDuplicates]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -118,7 +94,7 @@ export default function ToolFilterChar() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

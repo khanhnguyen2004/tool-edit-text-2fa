@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 type DuplicateMode = 'remove' | 'keep';
 
@@ -11,19 +11,22 @@ export default function ToolDuplicate() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        // Parse nội dung A và B thành mảng các dòng
-        const linesA = contentA.split('\n').filter(line => line.trim());
-        const linesB = contentB.split('\n').filter(line => line.trim());
+    // Memoize processed lines
+    const processedA = useMemo(() => {
+        const lines = contentA.split('\n').filter(line => line.trim());
+        return removeDuplicates ? [...new Set(lines)] : lines;
+    }, [contentA, removeDuplicates]);
 
-        // Loại bỏ trùng lặp trong từng nội dung nếu cần
-        let processedA = linesA;
-        let processedB = linesB;
+    const processedB = useMemo(() => {
+        const lines = contentB.split('\n').filter(line => line.trim());
+        return removeDuplicates ? [...new Set(lines)] : lines;
+    }, [contentB, removeDuplicates]);
 
-        if (removeDuplicates) {
-            processedA = [...new Set(processedA)];
-            processedB = [...new Set(processedB)];
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (processedA.length === 0 && processedB.length === 0) {
+            setResult('');
+            return;
         }
 
         // Chuyển thành Set để dễ so sánh
@@ -38,17 +41,17 @@ export default function ToolDuplicate() {
             const onlyInA = processedA.filter(line => !setB.has(line));
             const onlyInB = processedB.filter(line => !setA.has(line));
             output = [...onlyInA, ...onlyInB];
-        } else if (mode === 'keep') {
+        } else {
             // Giữ dòng trùng: chỉ giữ lại các dòng xuất hiện trong cả A và B
             // A ∩ B
             output = processedA.filter(line => setB.has(line));
         }
 
         setResult(output.join('\n'));
-    };
+    }, [processedA, processedB, mode]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -58,7 +61,7 @@ export default function ToolDuplicate() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

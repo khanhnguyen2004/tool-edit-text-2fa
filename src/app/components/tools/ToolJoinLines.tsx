@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 type JoinMode = 'all' | 'consecutive';
 
@@ -11,23 +11,20 @@ export default function ToolJoinLines() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize processed lines
+    const processedLines = useMemo(() => {
+        if (!content.trim()) return [];
+        const lines = content.split('\n').filter(line => line.trim());
+        return removeDuplicates ? [...new Set(lines)] : lines;
+    }, [content, removeDuplicates]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (processedLines.length === 0) {
             setResult('');
             return;
         }
 
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        let processedLines = lines;
-
-        // Loại bỏ trùng lặp nếu cần
-        if (removeDuplicates) {
-            processedLines = [...new Set(processedLines)];
-        }
-
-        // Xử lý theo mode
         let output = '';
         if (mode === 'all') {
             // Ghép tất cả các dòng lại với nhau bằng delimiter
@@ -37,17 +34,17 @@ export default function ToolJoinLines() {
             const resultLines: string[] = [];
             for (let i = 0; i < processedLines.length; i += 2) {
                 const line1 = processedLines[i];
-                const line2 = processedLines[i + 1] !== undefined ? processedLines[i + 1] : 'undefined';
+                const line2 = processedLines[i + 1] ?? 'undefined';
                 resultLines.push(`${line1}${delimiter}${line2}`);
             }
             output = resultLines.join('\n');
         }
 
         setResult(output);
-    };
+    }, [processedLines, mode, delimiter]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -57,7 +54,7 @@ export default function ToolJoinLines() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">

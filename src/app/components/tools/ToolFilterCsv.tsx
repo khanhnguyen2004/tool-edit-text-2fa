@@ -1,5 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+
+const CSV_DELIMITER = ';';
+const QUOTE_REGEX = /^"|"$/g;
 
 export default function ToolFilterCsv() {
     const [removeDuplicates, setRemoveDuplicates] = useState(true);
@@ -9,135 +12,127 @@ export default function ToolFilterCsv() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Parse CSV và lấy danh sách cột
-    const parseCSV = (csvText: string) => {
+    // Parse CSV và lấy danh sách cột - memoized và tối ưu
+    const parseCSV = useCallback((csvText: string) => {
         const lines = csvText.split('\n').filter(line => line.trim());
         if (lines.length === 0) return { headers: [], rows: [] };
 
         // Parse header và rows
-        const delimiter = ';';
-        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+        const headers = lines[0].split(CSV_DELIMITER).map(h => h.trim().replace(QUOTE_REGEX, ''));
         const rows: string[][] = [];
 
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+            const values = lines[i].split(CSV_DELIMITER).map(v => v.trim().replace(QUOTE_REGEX, ''));
             rows.push(values);
         }
 
         return { headers, rows };
-    };
+    }, []);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
-            setResult('');
-            return;
-        }
+    // Memoize parsed CSV data
+    const csvData = useMemo(() => parseCSV(content), [content, parseCSV]);
+    const { headers, rows } = csvData;
 
-        const { headers, rows } = parseCSV(content);
+    // Memoize available columns
+    const availableColumns = useMemo(() => headers, [headers]);
 
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
         if (headers.length === 0) {
             setResult('');
             return;
         }
 
         // Xác định các cột cần lấy
-        let columnsToKeep: number[] = [];
-        
-        if (selectedColumns.has('all')) {
-            // Lấy tất cả các cột
-            columnsToKeep = headers.map((_, index) => index);
-        } else {
-            // Lấy các cột được chọn
-            headers.forEach((header, index) => {
-                if (selectedColumns.has(header)) {
-                    columnsToKeep.push(index);
-                }
-            });
+        const columnsToKeep: number[] = selectedColumns.has('all')
+            ? headers.map((_, index) => index)
+            : headers
+                .map((header, index) => selectedColumns.has(header) ? index : -1)
+                .filter(idx => idx !== -1);
+
+        if (columnsToKeep.length === 0) {
+            setResult('');
+            return;
         }
 
         // Lọc và xử lý dữ liệu
-        let processedRows = rows.map(row => {
-            return columnsToKeep.map(colIndex => {
-                return row[colIndex] !== undefined ? row[colIndex] : '';
-            });
-        });
+        let processedRows = rows.map(row => 
+            columnsToKeep.map(colIndex => row[colIndex] ?? '')
+        );
 
         // Loại bỏ trùng lặp nếu cần
         if (removeDuplicates) {
             const seen = new Set<string>();
             processedRows = processedRows.filter(row => {
                 const rowKey = row.join('|');
-                if (seen.has(rowKey)) {
-                    return false;
-                }
+                if (seen.has(rowKey)) return false;
                 seen.add(rowKey);
                 return true;
             });
         }
 
         // Tạo kết quả
-        const delimiter = ';';
         const resultLines: string[] = [];
 
         // Thêm header nếu có
         if (hasHeader) {
-            const headerRow = columnsToKeep.map(colIndex => `"${headers[colIndex]}"`).join(delimiter);
+            const headerRow = columnsToKeep.map(colIndex => `"${headers[colIndex]}"`).join(CSV_DELIMITER);
             resultLines.push(headerRow);
         }
 
         // Thêm các dòng dữ liệu
         processedRows.forEach(row => {
-            const rowStr = row.map(val => `"${val}"`).join(delimiter);
+            const rowStr = row.map(val => `"${val}"`).join(CSV_DELIMITER);
             resultLines.push(rowStr);
         });
 
         setResult(resultLines.join('\n'));
-    };
+    }, [headers, rows, selectedColumns, removeDuplicates, hasHeader]);
 
-    // Toggle cột
-    const handleColumnToggle = (column: string) => {
-        const newSelected = new Set(selectedColumns);
-        
-        if (column === 'all') {
-            if (newSelected.has('all')) {
-                // Bỏ chọn tất cả
-                newSelected.clear();
-            } else {
-                // Chọn tất cả
-                newSelected.clear();
-                newSelected.add('all');
-                // Thêm tất cả các cột hiện có
-                const { headers } = parseCSV(content);
-                headers.forEach(h => newSelected.add(h));
-            }
-        } else {
-            if (newSelected.has(column)) {
-                newSelected.delete(column);
-                newSelected.delete('all'); // Bỏ chọn "Tất cả" nếu bỏ chọn một cột
-            } else {
-                newSelected.add(column);
-                // Kiểm tra nếu tất cả các cột đều được chọn, thì tự động chọn "Tất cả"
-                const { headers } = parseCSV(content);
-                const allColumnsSelected = headers.every(h => newSelected.has(h));
-                if (allColumnsSelected && headers.length > 0) {
+    // Toggle cột - tối ưu với useCallback
+    const handleColumnToggle = useCallback((column: string) => {
+        setSelectedColumns(prev => {
+            const newSelected = new Set(prev);
+            
+            if (column === 'all') {
+                if (newSelected.has('all')) {
+                    // Bỏ chọn tất cả
+                    newSelected.clear();
+                } else {
+                    // Chọn tất cả
+                    newSelected.clear();
                     newSelected.add('all');
+                    // Thêm tất cả các cột hiện có
+                    headers.forEach(h => newSelected.add(h));
+                }
+            } else {
+                if (newSelected.has(column)) {
+                    newSelected.delete(column);
+                    newSelected.delete('all'); // Bỏ chọn "Tất cả" nếu bỏ chọn một cột
+                } else {
+                    newSelected.add(column);
+                    // Kiểm tra nếu tất cả các cột đều được chọn, thì tự động chọn "Tất cả"
+                    const allColumnsSelected = headers.every(h => newSelected.has(h));
+                    if (allColumnsSelected && headers.length > 0) {
+                        newSelected.add('all');
+                    }
                 }
             }
-        }
-        
-        setSelectedColumns(newSelected);
-    };
+            
+            return newSelected;
+        });
+    }, [headers]);
 
     // Tự động chọn "Tất cả" nếu tất cả các cột đều được chọn
     useEffect(() => {
-        const { headers } = parseCSV(content);
         if (headers.length > 0) {
             setSelectedColumns(prev => {
                 const allColumnsSelected = headers.every(h => prev.has(h));
                 const hasAll = prev.has('all');
-                const newSet = new Set(prev);
                 
+                if (allColumnsSelected === hasAll) return prev; // Không thay đổi
+                
+                const newSet = new Set(prev);
                 if (allColumnsSelected && !hasAll) {
                     newSet.add('all');
                 } else if (!allColumnsSelected && hasAll) {
@@ -147,16 +142,10 @@ export default function ToolFilterCsv() {
                 return newSet;
             });
         }
-    }, [content]);
+    }, [headers]);
 
-    // Lấy danh sách cột từ CSV
-    const getAvailableColumns = () => {
-        const { headers } = parseCSV(content);
-        return headers;
-    };
-
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -166,9 +155,7 @@ export default function ToolFilterCsv() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
-
-    const availableColumns = getAvailableColumns();
+    }, [result]);
 
     return (
         <div className="space-y-6">
