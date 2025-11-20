@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export default function ToolFilterString() {
     const [removeDuplicates, setRemoveDuplicates] = useState(true);
@@ -9,18 +9,27 @@ export default function ToolFilterString() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize parsed words
+    const includeList = useMemo(() => {
+        return includeWords.split('\n').map(w => w.trim()).filter(w => w);
+    }, [includeWords]);
+
+    const excludeList = useMemo(() => {
+        return excludeWords.split('\n').map(w => w.trim()).filter(w => w);
+    }, [excludeWords]);
+
+    // Memoize lines
+    const lines = useMemo(() => {
+        if (!content.trim()) return [];
+        return content.split('\n').filter(line => line.trim());
+    }, [content]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (lines.length === 0) {
             setResult('');
             return;
         }
-
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        // Parse inclusion và exclusion words
-        const includeList = includeWords.split('\n').map(w => w.trim()).filter(w => w);
-        const excludeList = excludeWords.split('\n').map(w => w.trim()).filter(w => w);
 
         // Lọc các dòng
         let filteredLines = lines;
@@ -40,18 +49,13 @@ export default function ToolFilterString() {
             });
         }
 
-        let processedLines = filteredLines;
-
         // Loại bỏ trùng lặp nếu cần
-        if (removeDuplicates) {
-            processedLines = [...new Set(processedLines)];
-        }
-
+        const processedLines = removeDuplicates ? [...new Set(filteredLines)] : filteredLines;
         setResult(processedLines.join('\n'));
-    };
+    }, [lines, includeList, excludeList, removeDuplicates]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -61,7 +65,7 @@ export default function ToolFilterString() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">
@@ -134,7 +138,7 @@ export default function ToolFilterString() {
                 <button
                     type="button"
                     onClick={handleTrigger}
-                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium shadow-md hover:shadow-lg transition-shadow focus:outline-none"
                 >
                     Trigger
                 </button>

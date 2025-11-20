@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export default function ToolCopyFile() {
     const [content, setContent] = useState('Nội dung xyzt');
@@ -8,17 +8,30 @@ export default function ToolCopyFile() {
     const [fileExtension, setFileExtension] = useState('html');
     const [fileName, setFileName] = useState('google-');
 
-    // Xử lý trigger - tạo và tải file zip
-    const handleTrigger = async () => {
+    // Memoize parsed values
+    const parsedStart = useMemo(() => {
+        const val = parseInt(startFrom, 10);
+        return isNaN(val) ? 0 : val;
+    }, [startFrom]);
+
+    const parsedEnd = useMemo(() => {
+        const val = parseInt(endAt, 10);
+        return isNaN(val) ? 0 : val;
+    }, [endAt]);
+
+    // Validate range
+    const isValidRange = useMemo(() => {
+        return parsedStart > 0 && parsedEnd > 0 && parsedStart <= parsedEnd;
+    }, [parsedStart, parsedEnd]);
+
+    // Xử lý trigger - tạo và tải file zip - tối ưu với useCallback
+    const handleTrigger = useCallback(async () => {
         if (!content.trim()) {
             alert('Vui lòng nhập nội dung');
             return;
         }
 
-        const start = parseInt(startFrom, 10);
-        const end = parseInt(endAt, 10);
-
-        if (isNaN(start) || isNaN(end) || start > end) {
+        if (!isValidRange) {
             alert('Vui lòng nhập số hợp lệ (Bắt đầu từ <= Kết thúc)');
             return;
         }
@@ -31,7 +44,7 @@ export default function ToolCopyFile() {
             const zip = new JSZip();
 
             // Tạo các file trong zip
-            for (let i = start; i <= end; i++) {
+            for (let i = parsedStart; i <= parsedEnd; i++) {
                 const fullFileName = `${fileName}${i}.${fileExtension}`;
                 zip.file(fullFileName, content);
             }
@@ -50,7 +63,7 @@ export default function ToolCopyFile() {
             console.error('Failed to create zip:', err);
             alert('Có lỗi xảy ra khi tạo file zip. Vui lòng đảm bảo đã cài đặt jszip: npm install jszip');
         }
-    };
+    }, [content, isValidRange, parsedStart, parsedEnd, fileName, fileExtension]);
 
     return (
         <div className="space-y-6">
@@ -131,7 +144,7 @@ export default function ToolCopyFile() {
                 <button
                     type="button"
                     onClick={handleTrigger}
-                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium shadow-md hover:shadow-lg transition-shadow focus:outline-none"
                 >
                     Trigger
                 </button>

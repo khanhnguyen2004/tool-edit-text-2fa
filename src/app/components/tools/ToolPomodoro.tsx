@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ToolIcons } from '../ToolIcons';
 
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
@@ -34,16 +34,15 @@ export default function ToolPomodoro() {
 
     const [tempPresetConfigs, setTempPresetConfigs] = useState<PresetConfig[]>(presetConfigs);
 
-    const getPresets = (): TimerPreset[] => {
+    // Memoize presets để tránh tính toán lại
+    const presets = useMemo((): TimerPreset[] => {
         return presetConfigs.map((config) => ({
             label: config.mode === 'work' ? 'W' : config.mode === 'shortBreak' ? 'SB' : 'LB',
             minutes: config.minutes,
             mode: config.mode,
             color: config.mode === 'work' ? 'bg-yellow-400' : config.mode === 'shortBreak' ? 'bg-green-300' : 'bg-blue-300',
         }));
-    };
-
-    const presets = getPresets();
+    }, [presetConfigs]);
 
     const totalTime = useRef(25 * 60);
 
@@ -78,61 +77,63 @@ export default function ToolPomodoro() {
         setProgress(Math.min(100, Math.max(0, newProgress)));
     }, [timeLeft]);
 
-    const formatTime = (seconds: number): string => {
+    // Memoize formatTime function
+    const formatTime = useCallback((seconds: number): string => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
+    }, []);
 
-    const handlePresetClick = (preset: TimerPreset) => {
+    // Memoize color functions
+    const borderColor = useMemo(() => {
+        if (currentMode === 'work') return 'border-orange-500';
+        if (currentMode === 'shortBreak') return 'border-green-500';
+        return 'border-blue-500';
+    }, [currentMode]);
+
+    const textColor = useMemo(() => {
+        if (currentMode === 'work') return 'text-orange-500';
+        if (currentMode === 'shortBreak') return 'text-green-500';
+        return 'text-blue-500';
+    }, [currentMode]);
+
+    const handlePresetClick = useCallback((preset: TimerPreset) => {
         const newTime = preset.minutes * 60;
         setTimeLeft(newTime);
         totalTime.current = newTime;
         setCurrentMode(preset.mode);
         setIsRunning(false);
         setProgress(0);
-    };
+    }, []);
 
-    const handlePlayPause = () => {
-        setIsRunning(!isRunning);
-    };
+    const handlePlayPause = useCallback(() => {
+        setIsRunning(prev => !prev);
+    }, []);
 
-    const handleSkip = () => {
+    const handleSkip = useCallback(() => {
         setIsRunning(false);
         setTimeLeft(0);
         setProgress(100);
-    };
+    }, []);
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setIsRunning(false);
         setTimeLeft(totalTime.current);
         setProgress(0);
-    };
-
-    const getBorderColor = () => {
-        if (currentMode === 'work') return 'border-orange-500';
-        if (currentMode === 'shortBreak') return 'border-green-500';
-        return 'border-blue-500';
-    };
-
-    const getTextColor = () => {
-        if (currentMode === 'work') return 'text-orange-500';
-        if (currentMode === 'shortBreak') return 'text-green-500';
-        return 'text-blue-500';
-    };
+    }, []);
 
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-12rem)] py-12">
             <div className="max-w-2xl w-full mx-auto">
                 <div className="flex flex-col items-center gap-6 border border-gray-200 rounded-lg bg-white p-6 shadow-sm">
                 {/* Timer Display */}
-                <div className={`w-full max-w-md border-4 ${getBorderColor()} rounded-lg p-8 bg-white`}>
-                    <div className={`text-6xl font-bold text-center ${getTextColor()} mb-4`}>
+                <div className={`w-full max-w-md border-4 ${borderColor} rounded-lg p-8 bg-white`}>
+                    <div className={`text-6xl font-bold text-center ${textColor} mb-4`}>
                         {formatTime(timeLeft)}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                         <div
-                            className={`h-2 rounded-full transition-all duration-300 ${getBorderColor().replace('border-', 'bg-')}`}
+                            className={`h-2 rounded-full transition-all duration-300 ${borderColor.replace('border-', 'bg-')}`}
                             style={{ width: `${progress}%` }}
                         />
                     </div>

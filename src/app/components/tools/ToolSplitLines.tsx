@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export default function ToolSplitLines() {
     const [removeDuplicates, setRemoveDuplicates] = useState(true);
@@ -8,35 +8,34 @@ export default function ToolSplitLines() {
     const [result, setResult] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Xử lý trigger
-    const handleTrigger = () => {
-        if (!content.trim()) {
+    // Memoize split items
+    const splitItems = useMemo(() => {
+        if (!content.trim()) return [];
+        const lines = content.split('\n').filter(line => line.trim());
+        const items: string[] = [];
+        
+        for (const line of lines) {
+            const lineItems = line.split(delimiter).map(item => item.trim()).filter(item => item);
+            items.push(...lineItems);
+        }
+        
+        return items;
+    }, [content, delimiter]);
+
+    // Xử lý trigger - tối ưu với useCallback
+    const handleTrigger = useCallback(() => {
+        if (splitItems.length === 0) {
             setResult('');
             return;
         }
 
-        const lines = content.split('\n').filter(line => line.trim());
-        
-        // Chia mỗi dòng theo delimiter
-        const splitItems: string[] = [];
-        
-        for (const line of lines) {
-            const items = line.split(delimiter).map(item => item.trim()).filter(item => item);
-            splitItems.push(...items);
-        }
-
-        let processedItems = splitItems;
-
         // Loại bỏ trùng lặp nếu cần
-        if (removeDuplicates) {
-            processedItems = [...new Set(processedItems)];
-        }
-
+        const processedItems = removeDuplicates ? [...new Set(splitItems)] : splitItems;
         setResult(processedItems.join('\n'));
-    };
+    }, [splitItems, removeDuplicates]);
 
-    // Copy kết quả vào clipboard
-    const handleCopy = async () => {
+    // Copy kết quả vào clipboard - tối ưu với useCallback
+    const handleCopy = useCallback(async () => {
         if (!result) return;
         
         try {
@@ -46,7 +45,7 @@ export default function ToolSplitLines() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, [result]);
 
     return (
         <div className="space-y-6">
@@ -105,7 +104,7 @@ export default function ToolSplitLines() {
                 <button
                     type="button"
                     onClick={handleTrigger}
-                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium shadow-md hover:shadow-lg transition-shadow focus:outline-none"
                 >
                     Trigger
                 </button>

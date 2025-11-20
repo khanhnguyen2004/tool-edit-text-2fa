@@ -1,44 +1,83 @@
 'use client';
 import { useState } from 'react';
+
 export default function ToolFacebookLink() {
     const [removeDuplicate, setRemoveDuplicate] = useState(true);
     const [uidList, setUidList] = useState('');
     const [links, setLinks] = useState<string[]>([]);
+
     const handleCreateLinks = () => {
         let uids = uidList.split('\n').map((u) => u.trim()).filter((u) => u.length > 0);
         if (removeDuplicate) {
             uids = Array.from(new Set(uids));
         }
         setLinks(uids);
-    }
+    };
+
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex items-center space-x-4">
-                <label className="text-gray-700 font-medium w-48 text-right me-3">Loại bỏ trùng lặp?</label>
-                <label className="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" checked={removeDuplicate} onChange={(e) => setRemoveDuplicate(e.target.checked)} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 relative">
-                        <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform ${removeDuplicate ? 'translate-x-5' : ''}`} ></span>
-                    </div>
+        <div className="space-y-6">
+            {/* Toggle Loại bỏ trùng lặp */}
+            <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-[var(--foreground)]">
+                    Loại bỏ trùng lặp?
                 </label>
+                <button
+                    type="button"
+                    onClick={() => setRemoveDuplicate(!removeDuplicate)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
+                        removeDuplicate ? 'bg-[var(--primary)]' : 'bg-[var(--muted)]'
+                    }`}
+                    role="switch"
+                    aria-checked={removeDuplicate}
+                >
+                    <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            removeDuplicate ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                </button>
             </div>
-            <div className="flex flex-row items-start">
-                <label className="text-gray-700 font-medium w-48 me-3">Danh sách UID Facebook</label>
-                <textarea className="border rounded p-2 min-h-[100px] flex-1" placeholder="Nhập danh sách UID, mỗi UID một dòng" value={uidList} onChange={(e) => setUidList(e.target.value)} />
+
+            {/* Ô nhập danh sách UID */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--foreground)]">
+                    Danh sách UID Facebook
+                </label>
+                <textarea
+                    value={uidList}
+                    onChange={(e) => setUidList(e.target.value)}
+                    placeholder="Nhập danh sách UID, mỗi UID một dòng..."
+                    className="w-full h-64 p-4 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)] font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                    style={{ scrollbarWidth: 'thin' }}
+                />
             </div>
-            <div className="flex justify-start">
-                <button onClick={handleCreateLinks} className="bg-green-600 ms-51 text-white px-4 py-2 rounded hover:bg-green-700">
+
+            {/* Nút Tạo liên kết */}
+            <div className="flex justify-center">
+                <button
+                    onClick={handleCreateLinks}
+                    className="px-6 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg font-medium shadow-md hover:shadow-lg transition-shadow focus:outline-none"
+                >
                     Tạo liên kết
                 </button>
             </div>
+
+            {/* Danh sách links */}
             {links.length > 0 && (
-                <div className="mt-4">
-                    <h2 className="font-medium mb-2">Kết quả:</h2>
-                    <div className="space-y-1">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                        Kết quả ({links.length} links)
+                    </label>
+                    <div className="space-y-2 border border-[var(--border)] rounded-lg bg-white p-4 max-h-96 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                         {links.map((uid, index) => (
-                            <div key={`${uid}-${index}`} className="bg-gray-100 p-2 rounded">
-                                <a href={`https://facebook.com/${uid}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                    {uid}
+                            <div key={`${uid}-${index}`} className="border border-[var(--border)] rounded-lg p-3 hover:bg-[var(--muted)] transition-colors">
+                                <a
+                                    href={`https://facebook.com/${uid}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[var(--primary)] hover:underline text-sm break-all"
+                                >
+                                    https://facebook.com/{uid}
                                 </a>
                             </div>
                         ))}
@@ -46,5 +85,5 @@ export default function ToolFacebookLink() {
                 </div>
             )}
         </div>
-    )   
+    );
 }

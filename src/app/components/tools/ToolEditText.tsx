@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 type TextStyle = {
     id: string;
@@ -165,10 +165,11 @@ export default function ToolEditText() {
         }
     };
 
-    const transformText = (text: string, map: Record<string, string> | undefined): string => {
+    // Memoize transformText function
+    const transformText = useCallback((text: string, map: Record<string, string> | undefined): string => {
         if (!map || !text) return text || '';
         return text.split('').map(char => map[char] || char).join('');
-    };
+    }, []);
 
     const textStyles: TextStyle[] = useMemo(() => [
         {
@@ -789,7 +790,8 @@ export default function ToolEditText() {
         }
     ], []);
 
-    const handleCopy = async (styleId: string, transformedText: string) => {
+    // Memoize handleCopy function
+    const handleCopy = useCallback(async (styleId: string, transformedText: string) => {
         try {
             await navigator.clipboard.writeText(transformedText);
             setCopiedId(styleId);
@@ -797,7 +799,7 @@ export default function ToolEditText() {
         } catch (err) {
             console.error('Failed to copy:', err);
         }
-    };
+    }, []);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
